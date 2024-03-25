@@ -1,0 +1,74 @@
+import praw
+import pandas as pd
+
+#model kurmak için kütüphane ekliyoruz
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+
+
+# Reddit Kimlik Bilgileri
+CLIENT_ID = "*****"
+CLIENT_SECRET = "*****"
+USERNAME = "*****"
+PASSWORD = "*****"
+
+# Arama Terimi
+arama_terimi = "kripto"
+
+
+# Reddit API Oluşturma
+reddit = praw.Reddit( 
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    username=USERNAME,
+    password=PASSWORD,
+    user_agent="My User Agent",
+)
+
+# Gönderi Kimliklerini Bulma
+submission_ids = []
+for submission in reddit.subreddit("kripto").search(arama_terimi, limit=20):
+    submission_ids.append(submission.id)
+
+# Gönderilerden Veri Çekme
+gonderiler = []
+for submission_id in submission_ids:
+    submission = reddit.submission(submission_id)
+    gonderiler.append(
+        {
+            "Baslik": submission.title,
+            "Metin": submission.selftext,
+            "Subreddit": submission.subreddit.display_name,
+            }
+        )
+
+# DataFrame Oluşturma
+df = pd.DataFrame(gonderiler)
+
+# Tüm Metni Yazdırma
+
+# 1. Yöntem: `pd.set_option` kullanma
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+
+print(df)
+
+# 2. Yöntem: `to_string` kullanma
+print(df.to_string(max_rows=None, max_cols=None))
+
+# 3. Yöntem: `selftext` sütununu ayrı bir değişkene atamak
+for i in range(len(df)):
+    print(f"Başlık: {df['Baslik'][i]}")
+    print(f"Subreddit: {df['Subreddit'][i]}")
+    print(f"Metin: {df['Metin'][i]}")
+    print("-" * 50) 
+
+# Excel dosyası oluşturmak
+excel_dosyasi = "RedditProjesi1.xlsx"
+df.to_excel(excel_dosyasi)
+print(f"Veriler '{excel_dosyasi}' excel dosyasına yazdırıldı.")
+
+
