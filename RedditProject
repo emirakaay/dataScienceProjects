@@ -1,22 +1,15 @@
 import praw
 import pandas as pd
-
-#model kurmak için kütüphane ekliyoruz
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-
+import numpy as np
 
 # Reddit Kimlik Bilgileri
-CLIENT_ID = "*****"
-CLIENT_SECRET = "*****"
-USERNAME = "*****"
-PASSWORD = "*****"
+CLIENT_ID = "XXXX"
+CLIENT_SECRET = "XXXX"
+USERNAME = "XXXX"
+PASSWORD = "XXXX"
 
 # Arama Terimi
-arama_terimi = "kripto"
+arama_terimi = "bitcoin"
 
 
 # Reddit API Oluşturma
@@ -30,7 +23,7 @@ reddit = praw.Reddit(
 
 # Gönderi Kimliklerini Bulma
 submission_ids = []
-for submission in reddit.subreddit("kripto").search(arama_terimi, limit=20):
+for submission in reddit.subreddit("bitcoin").search(arama_terimi, limit=15):
     submission_ids.append(submission.id)
 
 # Gönderilerden Veri Çekme
@@ -65,6 +58,20 @@ for i in range(len(df)):
     print(f"Subreddit: {df['Subreddit'][i]}")
     print(f"Metin: {df['Metin'][i]}")
     print("-" * 50) 
+
+
+# Duyguları analiz etmek için TextBlob kullanma
+from textblob import TextBlob
+
+# Gönderilerden Duyguları Çıkarma
+for i in range(len(df)):
+    blob = TextBlob(df['Metin'][i])
+    duygu = blob.sentiment.polarity
+    df.loc[i, 'Duygu'] = duygu
+
+#duyguları sınıflandırma
+df["Duygu Çıkarımları"] = np.where(df["Duygu"] > 0, "Pozitif", np.where(df["Duygu"] == 0, "Nötr", "Negatif"))
+df["Duygu Çıkarımları"] = np.where(df["Duygu"] > 0.05, "Pozitif", np.where(df["Duygu"] > -0.05, "Nötr", "Negatif"))
 
 # Excel dosyası oluşturmak
 excel_dosyasi = "RedditProjesi1.xlsx"
