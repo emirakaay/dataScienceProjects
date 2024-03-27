@@ -1,6 +1,7 @@
 import praw
 import pandas as pd
 import numpy as np
+from textblob import TextBlob
 
 # Reddit Kimlik Bilgileri
 CLIENT_ID = "XXXX"
@@ -59,10 +60,6 @@ for i in range(len(df)):
     print(f"Metin: {df['Metin'][i]}")
     print("-" * 50) 
 
-
-# Duyguları analiz etmek için TextBlob kullanma
-from textblob import TextBlob
-
 # Gönderilerden Duyguları Çıkarma
 for i in range(len(df)):
     blob = TextBlob(df['Metin'][i])
@@ -72,6 +69,20 @@ for i in range(len(df)):
 #duyguları sınıflandırma
 df["Duygu Çıkarımları"] = np.where(df["Duygu"] > 0, "Pozitif", np.where(df["Duygu"] == 0, "Nötr", "Negatif"))
 df["Duygu Çıkarımları"] = np.where(df["Duygu"] > 0.05, "Pozitif", np.where(df["Duygu"] > -0.05, "Nötr", "Negatif"))
+
+# Pozitif ve Negatif Sayıları Hesaplama
+pozitif_sayi = df["Duygu Çıkarımları"].str.count("Pozitif").sum()
+negatif_sayi = df["Duygu Çıkarımları"].str.count("Negatif").sum()
+
+# Sonuçları Yazdırma
+print(f"**Duygu Sayıları:**")
+print(f"- Pozitif: {pozitif_sayi}")
+print(f"- Negatif: {negatif_sayi}")
+
+print(f"\n**Duygu Oranları:**")
+print(f"- Pozitif: {round(pozitif_sayi / len(df) * 100, 2)}%")
+print(f"- Negatif: {round(negatif_sayi / len(df) * 100, 2)}%")
+
 
 # Excel dosyası oluşturmak
 excel_dosyasi = "RedditProjesi1.xlsx"
